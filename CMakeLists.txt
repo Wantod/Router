@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.12)
 project(router)
 
 set(CLIENT_NAME "client")
-set(TEST_NAME "test")
+set(TEST_NAME "test_client")
 
 message("Generation avec la configuration ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE}")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/)
@@ -22,7 +22,9 @@ add_executable(${CLIENT_NAME} "src/main.cpp" ${CLIENT_SRC})
 file(GLOB_RECURSE TEST_SRC src/test/*.cpp src/test/*.hpp)
 add_executable(${TEST_NAME} "src/main_test.cpp" ${TEST_SRC}  ${CLIENT_SRC})
 
-
+enable_testing()
+add_test(test ${TEST_NAME})
+	  
 if (CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${CLIENT_NAME} PRIVATE "-Wall")
     target_compile_options(${TEST_NAME} PRIVATE "-Wall")
