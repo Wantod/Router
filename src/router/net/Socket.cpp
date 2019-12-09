@@ -45,6 +45,7 @@ namespace net
 		close(s);
 #endif
 	}
+	
 	std::string GetAddress(const sockaddr_in& addr)
 	{
 		char buff[INET6_ADDRSTRLEN] = { 0 };
