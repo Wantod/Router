@@ -94,6 +94,14 @@ void test_dns_serveur()
 	t1.join();	
 }
 
+#include "router/proxy/ServerProxy.hpp"
+void test_proxy()
+{
+	net::Start();
+	runProxy(5050);
+	net::Release();
+}
+
 int main() {
 	std::cout << "Test" << std::endl;
 
@@ -101,7 +109,8 @@ int main() {
 	test_packet_recv();
 	test_packet_move();
 	test_packet_stack();
-	test_dns_serveur();
+	// test_dns_serveur();
+	test_proxy();
 
 	// int a = 2;
 	// CHECK(1 == 1); // success

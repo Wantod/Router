@@ -21,6 +21,7 @@
 			#pragma comment(lib, "Ws2_32.lib")
 		#else
 			#pragma comment(lib, "wsock32.lib")
+			#pragma comment (lib, "Ws2_32.lib")
 		#endif
 	#endif
 #else
