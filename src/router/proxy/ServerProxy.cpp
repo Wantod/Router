@@ -98,7 +98,7 @@ void newClient(SOCKET sockClient)
 	int recvd = MAX_BUFFER_SIZE;
 	while (recvd == MAX_BUFFER_SIZE)
 	{
-		recvd = recv(sockClient, buff, MAX_BUFFER_SIZE, 0);
+		recvd = ::recv(sockClient, buff, MAX_BUFFER_SIZE, 0);
 		std::cout << recvd << " - data\n";
 		if (recvd < 0) {
 			return ;
@@ -146,18 +146,24 @@ bool runProxy(int port)
 		return false;
 	}
 
-	listen(sockFD, 100); // maximum 100 requets
+	// maximum 100 requets
+	if (::listen(sockFD, 100) == SOCKET_ERROR) {
+		std::cerr << "ERROR listen: " <<  net::GetError() << std::endl;
+		return false;
+	}
 
-	socklen_t lenClient = sizeof(struct sockaddr_in);
 	while (1) {
+		socklen_t lenClient;
 		SOCKET sockClient = accept(sockFD, reinterpret_cast<sockaddr *>(&clientAddr), &lenClient);
-		if (sockClient == SOCKET_ERROR) {
+		if (sockClient == SOCKET_ERROR)
+		{
 			std::cerr << "ERROR: Request limited crossed" << std::endl;
+			continue;
 		}
 
 		std::cout << "Proxy: ip: " << Address::toString(clientAddr) << std::endl;
 		newClient(sockClient);
-		net::CloseSocket(sockClient);
+		net::CloseSocket(sockClient);		
 	}
 
 	net::CloseSocket(sockFD);

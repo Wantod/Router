@@ -117,6 +117,17 @@ public:
 		std::cout << "~Packet()\n";
 	}
 
+	std::size_t size() const { return _data.size(); }
+	void resize(std::size_t size = 0) { _data.resize(size); }
+	void clear() {
+		_data.clear();
+		_read = 0;
+		_write = 0;
+	}
+	char* data() const {
+		return (char *)(&_data[0]);
+	}
+
 	void* data(std::size_t size) {
 		if (_data.size() < size) {
 			std::size_t sizeP = _data.size();
@@ -157,7 +168,7 @@ public:
 		return *this;
 	}
 
-	std::string toString() {
+	std::string toString() const {
 		if (_data.size() == 0) return "";
 		char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 		std::string str_out;
@@ -173,11 +184,6 @@ public:
 
 		return str_out;
 	}
-
-	// static u16 recv16(u16 nb) { return reinterpret_cast<u16>(ntohs(nb)); }
-	// static u16 send16(u16 nb) { return reinterpret_cast<u16>(htons(nb)); }
-	// static u32 recv32(u32 nb) { return reinterpret_cast<u32>(ntohl(reinterpret_cast<u_long>(nb))); }
-	// static u32 send32(u32 nb) { return reinterpret_cast<u32>(htonl(reinterpret_cast<u_long>(nb))); }
 
 private:
 	std::vector<u8> _data;

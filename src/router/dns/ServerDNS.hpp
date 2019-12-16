@@ -8,7 +8,6 @@ class ServerDNS
 public:
 	ServerDNS() : _socketFD(0), _end(false)
 	{
-		net::Start();
 	}
 	~ServerDNS()
 	{
@@ -16,7 +15,6 @@ public:
 		{
 			net::CloseSocket(_socketFD);
 		}
-		net::Release();
 	}
 
 	bool init(int port);
