@@ -161,7 +161,7 @@ bool runProxy(int port)
 			continue;
 		}
 
-		std::cout << "Proxy: ip: " << Address::toString(clientAddr) << std::endl;
+		std::cout << "Proxy: ip: " << net::GetAddress(clientAddr) << std::endl;
 		newClient(sockClient);
 		net::CloseSocket(sockClient);		
 	}

@@ -16,8 +16,8 @@ void UDPSocket::close() {
 	}
 }
 
-bool UDPSocket::init(bool blocking) {
-	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); // ipv4, UDP
+bool UDPSocket::init(bool blocking, bool ipv6) {
+	sock = ::socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP); // ipv4, UDP
 
 	if (sock == INVALID_SOCKET)
 	{
@@ -34,18 +34,21 @@ bool UDPSocket::init(bool blocking) {
 	return true;
 }
 
-net::Addr UDPSocket::getSocket() {
-	return net::Addr(server);
+net::addr UDPSocket::getSocket() {
+	net::addr out;
+	out.data.s6 = server;
+	return out;
 }
 
 bool UDPSocket::bind(unsigned short port) {
-	server.sin_addr.s_addr = INADDR_ANY;  // indique que toutes les sources seront accept�es
+	server = {};
+	server.sin6_addr = in6addr_any;  // indique que toutes les sources seront accept�es
 										  // UTILE: si le port est 0 il est assign� automatiquement
-	server.sin_port = htons(port); // toujours penser � traduire le port en r�seau
-	server.sin_family = AF_INET; // notre socket est UDP
+	server.sin6_port = htons(port); // toujours penser � traduire le port en r�seau
+	server.sin6_family = AF_INET6; // notre socket est UDP
 	socklen_t size = sizeof(server);
 
-	getsockname(sock, (struct sockaddr *) &server, &size);
+	::getsockname(sock, (struct sockaddr *) &server, &size);
 	
 	if (::bind(sock, reinterpret_cast<SOCKADDR *>(&server), sizeof(server)) == SOCKET_ERROR)
 	{
@@ -53,7 +56,7 @@ bool UDPSocket::bind(unsigned short port) {
 		return false;
 	}
 
-	getsockname(sock, (struct sockaddr *) &server, &size);
+	::getsockname(sock, (struct sockaddr *) &server, &size);
 
 	return true;
 }
@@ -83,19 +86,19 @@ bool UDPSocket::wait() {
 	return false;
 }
 
-int UDPSocket::recv(void *data, std::size_t size, net::Addr &addr)
+int UDPSocket::recv(void *data, std::size_t size, net::addr &addr)
 {
-	int sinsize = sizeof (addr.sin);
+	int sinsize = net::get_size(addr);
 
-	int n = recvfrom(sock, static_cast<char*>(data), static_cast<int>(size), 0, reinterpret_cast<sockaddr*>(&addr.sin), &sinsize);
+	int n = ::recvfrom(sock, static_cast<char*>(data), static_cast<int>(size), 0, &addr.data.sa, &sinsize);
 	if (n < 0)
 		return -1;
 	return n;
 }
 
-bool UDPSocket::send(const void *data, std::size_t size, net::Addr &addr)
+bool UDPSocket::send(const void *data, std::size_t size, net::addr &addr)
 {
-	if (sendto(sock, static_cast<const char*>(data), static_cast<int>(size), 0, reinterpret_cast<sockaddr*>(&addr.sin), sizeof (addr.sin)) < 0)
+	if (::sendto(sock, static_cast<const char*>(data), static_cast<int>(size), 0, reinterpret_cast<sockaddr*>(&addr.data.sa), net::get_size(addr)) < 0)
 	{
 		std::cerr << "Erreur send()" << net::GetError() << std::endl;
 		return false;
@@ -104,20 +107,22 @@ bool UDPSocket::send(const void *data, std::size_t size, net::Addr &addr)
 	return true;
 }
 
-int UDPSocket::recv(Packet &packet, net::Addr & addr)
+int UDPSocket::recv(Packet &packet, net::addr & addr)
 {
-	int sinsize = sizeof(addr.sin);
+	addr.data.ss.ss_family = AF_INET6;
+	int sinsize = net::get_size(addr);
+	std::cout << "recv " << net::is_ipv6(addr) << std::endl;
 
-	int n = recvfrom(sock, packet.data(), static_cast<int>(packet.size()), 0, reinterpret_cast<sockaddr*>(&addr.sin), &sinsize);
+	int n = ::recvfrom(sock, packet.data(), static_cast<int>(packet.size()), 0, reinterpret_cast<sockaddr*>(&addr.data.sa), &sinsize);
 	if (n < 0)
 		return -1;
 	packet.resize(n);
 	return n;
 }
 
-bool UDPSocket::send(const Packet &packet, net::Addr & addr)
+bool UDPSocket::send(const Packet &packet, net::addr & addr)
 {
-	if (::sendto(sock, packet.data(), static_cast<int>(packet.size()), 0, reinterpret_cast<sockaddr*>(&addr.sin), sizeof(addr.sin)) < 0)
+	if (::sendto(sock, packet.data(), static_cast<int>(packet.size()), 0, &addr.data.sa, net::get_size(addr)) < 0)
 	{
 		std::cerr << "Erreur send(Packet): " << net::GetError() << std::endl;
 		return false;

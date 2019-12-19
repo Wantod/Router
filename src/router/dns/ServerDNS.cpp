@@ -33,7 +33,7 @@ void ServerDNS::run() {
 		int len = recvfrom(_socketFD, buffer, BUFFER_SIZE, 0, reinterpret_cast<struct sockaddr *>(&addrClient), &lenSock);	
 		if (len == -1) continue;
 
-		std::cout << "Packet reçu: " << len << " " << Address::toString(addrClient) << std::endl;
+		std::cout << "Packet reçu: " << len << " " << net::GetAddress(addrClient) << std::endl;
 		ParserPacket parser(buffer, len);
 		DNSParser::decode(parser);
 	}

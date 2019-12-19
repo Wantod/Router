@@ -1,10 +1,34 @@
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
+#include <catch2/catch.hpp>
 #include <iostream>
-#include "test/test.hpp"
+#include <chrono>
+#include <thread>
+
 #include "router/net/Packet.hpp"
 #include "router/net/PacketStack.hpp"
+#include "router/net/Address.hpp"
+#include "router/net/addr.hpp"
+#include "router/net/UDPSocket.hpp"
 
-bool test_packet() {
-	std::cout << "test_packet - start" << std::endl;
+TEST_CASE("[addr_new_v6]" ) {
+	net::Start();
+
+	net::addr clientAddr;
+	net::set_data(clientAddr, "127.0.0.1", 8080);
+	REQUIRE(net::to_string(clientAddr) == "127.0.0.1:8080");
+	REQUIRE(net::is_ipv6(clientAddr) == false);
+
+	net::set_data(clientAddr, "::1", 8080);
+	REQUIRE(net::to_string(clientAddr) == "::1:8080");
+	REQUIRE(net::is_ipv6(clientAddr) == true);
+
+
+	net::Release();
+}
+
+TEST_CASE("[packet]" ) {
 	struct DataTest {
 		u32 a;
 		u8 b;
@@ -26,17 +50,13 @@ bool test_packet() {
 	// read
 	DataTest dataRead = {};
 	packet >> dataRead.a >> dataRead.b >> dataRead.c;
-	EQUAL(dataRead.a, 3, "get info packet");
-	EQUAL(dataRead.b, 2, "get info packet");
-	EQUAL(dataRead.c, 0xABCD, "get info packet");
-
-	std::cout << "test_packet - end" << std::endl;
-	return true;
+	REQUIRE(dataRead.a == 3); // get info packet
+	REQUIRE(dataRead.b == 2); // get info packet
+	REQUIRE(dataRead.c == 0xABCD); // get info packet
 }
 
-bool test_packet_recv() {
-	std::cout << "test_packet_recv - start" << std::endl;
-	// recv
+
+TEST_CASE("[packet_recv]" ) {
 	u8 buff[254];
 	for (u8 i = 0; i < 254; i++) {
 		buff[i] = i;
@@ -48,135 +68,95 @@ bool test_packet_recv() {
 	{
 		u8 c;
 		packet >> c;
-		if (c != i) EQUAL(c, i, "error in read buffer to packet");
+		if (c != i) REQUIRE(c == i); // error in read buffer to packet
 	}
-
-	std::cout << "test_packet_recv - end" << std::endl;
-	return 0;
 }
 
-void test_packet_move()
-{
-	std::cout << "test_packet_move - start" << std::endl;
+TEST_CASE("[packet_move]" ) {
 	Packet packet(1040);
 	packet << 1 << 4 << 5 << 6 << 7 << 8;
-	std::cout << packet.toString() << "\n";
-
 	Packet packet2(std::move(packet));
-	std::cout << packet2.toString() << "\n";
-	std::cout << "test_packet_move - end" << std::endl;
+	REQUIRE("01-00-00-00-04-00-00-00-05-00-00-00-06-00-00-00-07-00-00-00-08-00-00-00" == packet2.toString());
 }
 
-#include <chrono>
-#include <thread>
-void test_packet_stack()
-{
-	std::cout << "test_packet_stack - start" << std::endl;
+TEST_CASE("[packet_stack]") {
 	PacketStack packet;
 	unsigned int port = packet.run("127.0.0.1");
 	(void) port;
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-	std::cout << "test_packet_stack - end" << std::endl;
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 #include "router/dns/ServerDNS.hpp"
 
-void test_dns_serveur()
-{
+TEST_CASE("dns_serveur") {
+	net::Start();
+
 	ServerDNS dns;
 	if (dns.init(53) == false) return ;
 
-	std::thread t1([&] {
-		dns.run();
-	});
-	std::this_thread::sleep_for(std::chrono::seconds(30));
+	std::thread t1([&] { dns.run(); });
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 	dns.stop();
-	t1.join();	
+	t1.join();
+
+	net::Release();
 }
 
-#include "router/proxy/ServerProxy.hpp"
-void test_proxy()
-{
-	runProxy(5050);
-}
-#include "router/net/Address.hpp"
+// #include "router/proxy/ServerProxy.hpp"
+// void test_proxy()
+// {
+// 	runProxy(5050);
+// }
 
-void test_addr()
-{
+TEST_CASE("addr", "[!benchmark]") {
     net::Addr addr(0x01010199, 10);
-    EQUAL(addr.toString(), "1.1.1.153:10");
-    std::cout << addr.toString() << std::endl;
+    CHECK(addr.toString() == "1.1.1.153:10");
 }
 
-#include "router/net/UDPSocket.hpp"
-void test_udp()
+TEST_CASE("[udp_server]")
 {
-    // server
+	net::Start();
+
     UDPSocket server;
-    server.init(true);
+    server.init(true, true);
     server.bind(0u);
-    std::cout << "Server addr: " << server.getSocket().toString() << std::endl;
 
     std::thread t1([&] {
         Packet packet;
-        net::Addr cliAddr;
+        net::addr cliAddr = {};
 
         packet.resize(250);
         std::cout << "Attendre recv" << std::endl;
         // msg 1
         server.recv(packet, cliAddr);
-        std::cout << "Packet reçu: " << packet.toString() << std::endl;
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-        EQUAL(packet.toString(), "00-FF-11-00-02-00-00-00-03-00-00-00-05-00-00-00");
+        CHECK(packet.toString() == "00-FF-11-FF-02-00-00-00-03-00-00-00-05-00-00-00");
+		std::cout << "CLIENT -> Serveur >>>>>>>>>>" << net::to_string(cliAddr) << std::endl;
         // msg 2
         server.recv(packet, cliAddr);
-        std::cout << "Packet reçu: " << packet.toString() << std::endl;
-        EQUAL(packet.toString(), "00-00-00-00-01-00-00-00-02-00-00-00-0A-00-00-00");
+        CHECK(packet.toString() == "00-00-00-00-01-00-00-00-02-00-00-00-0A-00-00-00");
+		std::cout << "CLIENT -> Serveur >>>>>>>>>>" << net::to_string(cliAddr) << std::endl;
 	});
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-
-    net::Addr addrServ;
-    addrServ.set("127.0.0.1", server.getSocket().getPort());
+    net::addr addrServ;
+	net::set_data(addrServ, "::1", net::get_port(server.getSocket()));
+	std::cout << "SERVER ADDR: " << net::to_string(addrServ) << " v6: " << (net::is_ipv6(addrServ) ? "true" : "false") << std::endl;
     // client
     UDPSocket client;
-    client.init(false);
+    client.init(false, true);
+	// std::cout << "CLIENT ADDR: " << net::to_string(client.getSocket()) << " v6: " << net::is_ipv6(addrServ) << std::endl;
     Packet p;
-    
     p << 0xFF11FF00 << 2 << 3 << 5;
     client.send(p, addrServ);
     p.clear();
-
     p << 0u << 1u << 2u << 10u;
     client.send(p, addrServ);
-
 
     // force shutdown after 5s
     std::this_thread::sleep_for(std::chrono::seconds(5));
     client.close();
     server.close();
     t1.join();
-}
 
-int main() {
-    net::Start();
-	std::cout << "Test" << std::endl;
-
-	test_packet();
-	test_packet_recv();
-	test_packet_move();
-	test_packet_stack();
-	// test_dns_serveur();()
-	// test_proxy();
-    test_addr();
-    test_udp();
-
-	// int a = 2;
-	// CHECK(1 == 1); // success
-	// CHECK(a != 2); // error
-	// EQUAL(a, 2);
-
-    net::Release();
-	displaySumaryError();
-	return 0;
+	net::Release();
 }

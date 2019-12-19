@@ -19,12 +19,16 @@ file(GLOB_RECURSE CLIENT_SRC src/router/*.cpp src/router/*.hpp)
 add_executable(${CLIENT_NAME} "src/main.cpp" ${CLIENT_SRC})
 
 # test
+add_library(Catch INTERFACE)
+target_include_directories(Catch INTERFACE lib/Catch2/single_include/)
+
 file(GLOB_RECURSE TEST_SRC src/test/*.cpp src/test/*.hpp)
 add_executable(${TEST_NAME} "src/main_test.cpp" ${TEST_SRC}  ${CLIENT_SRC})
+target_link_libraries(${TEST_NAME} Catch)
 
 enable_testing()
 add_test(test ${TEST_NAME})
-	  
+
 if (CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${CLIENT_NAME} PRIVATE "-Wall")
     target_compile_options(${TEST_NAME} PRIVATE "-Wall")
