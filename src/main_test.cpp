@@ -119,41 +119,43 @@ TEST_CASE("[udp_server]")
 	net::Start();
 
     UDPSocket server;
-    server.init(true, true);
+    server.init(true);
     server.bind(0u);
 
     std::thread t1([&] {
         Packet packet;
         net::addr cliAddr = {};
+		cliAddr.data.ss.ss_family = AF_INET;
 
         packet.resize(250);
-        std::cout << "Attendre recv" << std::endl;
-        // msg 1
-        server.recv(packet, cliAddr);
+        // std::cout << "Attendre recv" << std::endl;
+        // // msg 1
+        CHECK(server.recv(packet, cliAddr) != -1);
         CHECK(packet.toString() == "00-FF-11-FF-02-00-00-00-03-00-00-00-05-00-00-00");
-		std::cout << "CLIENT -> Serveur >>>>>>>>>>" << net::to_string(cliAddr) << std::endl;
         // msg 2
-        server.recv(packet, cliAddr);
+        CHECK(server.recv(packet, cliAddr) != 1);
         CHECK(packet.toString() == "00-00-00-00-01-00-00-00-02-00-00-00-0A-00-00-00");
-		std::cout << "CLIENT -> Serveur >>>>>>>>>>" << net::to_string(cliAddr) << std::endl;
 	});
 
-    net::addr addrServ;
-	net::set_data(addrServ, "::1", net::get_port(server.getSocket()));
+    net::addr addrServ = {};
+	net::set_data(addrServ, "127.0.0.1", net::get_port(server.getSocket()));
 	std::cout << "SERVER ADDR: " << net::to_string(addrServ) << " v6: " << (net::is_ipv6(addrServ) ? "true" : "false") << std::endl;
     // client
     UDPSocket client;
-    client.init(false, true);
-	// std::cout << "CLIENT ADDR: " << net::to_string(client.getSocket()) << " v6: " << net::is_ipv6(addrServ) << std::endl;
+    client.init(false);
     Packet p;
-    p << 0xFF11FF00 << 2 << 3 << 5;
-    client.send(p, addrServ);
-    p.clear();
-    p << 0u << 1u << 2u << 10u;
-    client.send(p, addrServ);
 
+	{
+		p << 0xFF11FF00 << 2 << 3 << 5;
+		client.send(p, addrServ);
+	}
+    p.clear();
+	{
+		p << 0u << 1u << 2u << 10u;
+		client.send(p, addrServ);
+	}
     // force shutdown after 5s
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     client.close();
     server.close();
     t1.join();

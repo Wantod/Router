@@ -17,7 +17,8 @@ void UDPSocket::close() {
 }
 
 bool UDPSocket::init(bool blocking, bool ipv6) {
-	sock = ::socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP); // ipv4, UDP
+	
+	sock = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP); // ipv4, UDP
 
 	if (sock == INVALID_SOCKET)
 	{
@@ -42,13 +43,14 @@ net::addr UDPSocket::getSocket() {
 
 bool UDPSocket::bind(unsigned short port) {
 	server = {};
+	server.sin6_flowinfo = 0;
 	server.sin6_addr = in6addr_any;  // indique que toutes les sources seront accept�es
 										  // UTILE: si le port est 0 il est assign� automatiquement
 	server.sin6_port = htons(port); // toujours penser � traduire le port en r�seau
-	server.sin6_family = AF_INET6; // notre socket est UDP
+	server.sin6_family = AF_INET; // notre socket est UDP
 	socklen_t size = sizeof(server);
 
-	::getsockname(sock, (struct sockaddr *) &server, &size);
+	// ::getsockname(sock, (struct sockaddr *) &server, &size);
 	
 	if (::bind(sock, reinterpret_cast<SOCKADDR *>(&server), sizeof(server)) == SOCKET_ERROR)
 	{
@@ -109,10 +111,7 @@ bool UDPSocket::send(const void *data, std::size_t size, net::addr &addr)
 
 int UDPSocket::recv(Packet &packet, net::addr & addr)
 {
-	addr.data.ss.ss_family = AF_INET6;
 	int sinsize = net::get_size(addr);
-	std::cout << "recv " << net::is_ipv6(addr) << std::endl;
-
 	int n = ::recvfrom(sock, packet.data(), static_cast<int>(packet.size()), 0, reinterpret_cast<sockaddr*>(&addr.data.sa), &sinsize);
 	if (n < 0)
 		return -1;

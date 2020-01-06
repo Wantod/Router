@@ -18,7 +18,7 @@ namespace net {
 	}
 
 	inline std::size_t get_size(addr &addr) {
-		return (is_ipv6(addr) ? sizeof(sockaddr_in6) : sizeof(sockaddr_in6));
+		return (is_ipv6(addr) ? sizeof(sockaddr_in6) : sizeof(sockaddr_in));
 	}
 
 	inline void set_data(addr &addr, const char *ipStr, const unsigned short int port, int family = AF_UNSPEC)
@@ -30,9 +30,8 @@ namespace net {
 		sprintf(port_buffer, "%hu", port);
 
 		std::memset(&hints, 0, sizeof(hints));
-		hints.ai_family = family;
+		hints.ai_family = AF_UNSPEC;
 		hints.ai_socktype = SOCK_DGRAM;
-		/* Setting AI_PASSIVE will give you a wildcard address if addr is NULL */
 		hints.ai_flags = AI_NUMERICHOST | AI_NUMERICSERV | AI_PASSIVE;
 
 		if ((status = getaddrinfo(ipStr, port_buffer, &hints, &res)) != 0)
@@ -41,7 +40,6 @@ namespace net {
 			return;
 		}
 
-		/* Note, we're taking the first valid address, there may be more than one */
 		std::memcpy(&addr.data.ss, res->ai_addr, res->ai_addrlen);
 		::freeaddrinfo(res);
 	}
