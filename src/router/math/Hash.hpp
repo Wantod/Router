@@ -1,5 +1,9 @@
 #pragma once
 
+#include "../Type.hpp"
+
+uint32_t rc_crc32(uint32_t crc, const char *buf, size_t len);
+
 // https://github.com/KdotJPG/Noise-VertexQueue-AreaGen/blob/master/SuperSimplex2DAreaGen.java
 // Reimplementation C++
 /**
@@ -11,9 +15,7 @@
  * 
  * End Software Patents: http://endsoftpatents.org/
  */
-
-#include "../Type.hpp"
-
+/*
 class Simplex2D {
 private:
 	uint64_t seed;
@@ -80,7 +82,7 @@ public:
 	
 	// /*
 	//  * Generator
-	//  */ 
+	//  
 	
 	// public void generate(GenerateContext2D context, double[][] destination, int x0, int y0) {
 	// 	Queue<AreaGenLatticePoint2D> queue = new LinkedList<AreaGenLatticePoint2D>();
@@ -172,7 +174,7 @@ public:
 	
 	// /*
 	//  * Utility
-	//  */
+	//  
 	
 	// private static int fastFloor(double x) {
 	// 	int xi = (int)x;
@@ -181,7 +183,7 @@ public:
 	
 	// /*
 	//  * Definitions
-	//  */
+	//  
 
 	// private static final LatticePoint2D[] LOOKUP_2D;
 	// static {
@@ -308,3 +310,4 @@ public:
 		                  0,  18.518518518518519
 	};
 };
+*/

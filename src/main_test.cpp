@@ -10,7 +10,24 @@
 #include "router/net/PacketStack.hpp"
 #include "router/net/Address.hpp"
 #include "router/net/addr.hpp"
-#include "router/net/UDPSocket.hpp"
+#include "router/net/UDP/UDPSocket.hpp"
+
+#include "router/math/Hash.hpp"
+#include "router/math/sha1.hpp"
+
+TEST_CASE("HASH") {
+	const char buff[255] = { "Hello world" };
+	auto start = std::chrono::high_resolution_clock::now();
+	uint32_t crc = rc_crc32(0, buff, 11);
+	auto stop = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+	CHECK(crc == 0x8BD69E52);
+	CHECK(duration.count() < 20);
+
+	sha1 hash;
+	hash.update("Hello world");
+	CHECK(hash.final() == "7b502c3a1f48c8609ae212cdfb639dee39673f5e");
+}
 
 TEST_CASE("[addr_new_v6]" ) {
 	net::Start();
@@ -95,8 +112,9 @@ TEST_CASE("dns_serveur") {
 	if (dns.init(53) == false) return ;
 
 	std::thread t1([&] { dns.run(); });
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+	
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	dns.stop();
 	t1.join();
 

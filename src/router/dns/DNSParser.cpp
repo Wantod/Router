@@ -50,6 +50,25 @@ DNSParser::HeaderDNS DNSParser::decode(ParserPacket &packet)
 	return header;
 }
 
+std::vector<char> DNSParser::encode(HeaderDNS header)
+{
+	char buff[255] = {};
+	ParserPacket packet(buff, 255);
+	header.r1 = header.r1 | ((header.qr		<< 7) & 0b10000000);
+	header.r1 = header.r1 | ((header.opcode	<< 3) & 0b01111000);
+	header.r1 = header.r1 | ((header.aa		<< 2) & 0b00000100);
+	header.r1 = header.r1 | ((header.tc		<< 1) & 0b00000010);
+	header.r1 = header.r1 | ((header.rd		<< 0) & 0b00000001);
+
+	header.r2 = header.r2 | ((header.ra		<< 7) & 0b10000000);
+	header.r2 = header.r2 | ((header.rcode	<< 0) & 0b00001111);
+
+	packet	<< header.id
+			<< header.r1 << header.r2
+			<< header.QDcount >> header.ANcount
+			<< header.NScount << header.ARcount; // 12 octets	
+}
+
 void DNSParser::display(HeaderDNS &mess)
 {
 	std::ostringstream text;

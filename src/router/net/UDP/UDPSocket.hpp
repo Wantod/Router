@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Socket.hpp"
-#include "Packet.hpp"
-#include "addr.hpp"
+#include "../Socket.hpp"
+#include "../Packet.hpp"
+#include "../addr.hpp"
 
 #include <iostream>
 #include <string>

@@ -11,6 +11,14 @@ namespace net {
 			struct sockaddr_in6     s6;
 			struct sockaddr_storage ss;
 		} data;
+
+		// inline bool is_ipv6(addr &address);
+		// inline std::size_t get_size(addr &addr);
+		// inline void set_data(addr &addr, const char *ipStr, const unsigned short int port, int family = AF_UNSPEC);
+		// inline void set_port(addr &addr, uint16_t port);
+		// inline uint16_t get_port(net::addr &addr);
+		// inline void set_family(addr &addr, int family);
+		// inline std::string to_string(addr &addr);
 	};
 	
 	inline bool is_ipv6(addr &address) {
