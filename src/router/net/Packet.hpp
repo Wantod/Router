@@ -44,7 +44,6 @@ public:
 		T nb2 = swap_endian(nb);
 		std::memcpy(&nb2, _data + _write, sizeof(T));
 		_write += sizeof(T);
-		return 
 	}
 
 	template<typename T>

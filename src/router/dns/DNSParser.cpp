@@ -66,7 +66,8 @@ std::vector<char> DNSParser::encode(HeaderDNS header)
 	packet	<< header.id
 			<< header.r1 << header.r2
 			<< header.QDcount >> header.ANcount
-			<< header.NScount << header.ARcount; // 12 octets	
+			<< header.NScount << header.ARcount; // 12 octets
+	return std::vector<char>();
 }
 
 void DNSParser::display(HeaderDNS &mess)
