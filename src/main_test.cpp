@@ -68,11 +68,16 @@ TEST_CASE("map_interval") {
 
 	{
 		auto start = std::chrono::high_resolution_clock::now();
-		uint16_t val = obj.get(1000);
+		for (int i = 0; i < 16 * 16 * 16; i++)
+		{
+			uint16_t val1 = obj.get(1000);
+			uint16_t val2 = obj.get(0);
+		}
+		uint16_t val = obj.get(0);
 		auto stop = std::chrono::high_resolution_clock::now();
 		CHECK(val == 'X');
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-		std::cout << "interval: " << (int)duration.count() << "ms\n";
+		std::cout << "interval get: " << (int)duration.count() << "ms\n";
 		CHECK(duration.count() < 100);
 	}
 

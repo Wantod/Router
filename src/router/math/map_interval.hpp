@@ -15,17 +15,16 @@ struct interval_map
 	}
 
 	int lowDico(uint16_t key, int pos = 0) {
-		bool isTrouver = false;
 		int iStart = pos;
 		int iEnd = keys.size() - 1;
 
-		while (iStart < iEnd && isTrouver == false)
+		while (iStart < iEnd)
 		{
 			// Calcul de la position du milieu
 			int iMilieu = (iStart + iEnd) / 2;
 
 			if (keys[iMilieu] == key)
-				isTrouver = true;
+				break;
 			else
 			{
 				// Si la valeur recherchée est plus petite
